@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.sapko.rs',
+  apiUrl: 'https://sapko.up.railway.app',
 };

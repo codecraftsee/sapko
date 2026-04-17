@@ -1,14 +1,111 @@
-* { box-sizing: border-box; }
+/* ===== DESIGN TOKENS ===== */
+:root {
+  /* Colors — default (dog / terracotta) */
+  --color-primary:       #C1593C;
+  --color-primary-light: #E8886E;
+  --color-surface:       #FEFAF5;
+  --color-surface-alt:   #F5EDE2;
+  --color-text:          #3A2820;
+  --color-text-muted:    #9A7A6A;
+  --color-green:         #4A7C59;
+  --color-amber:         #D4943A;
+  --color-border:        #EAE0D5;
+  --color-surface-accent: #FEF6EC;
 
+  /* Typography */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body:    'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Shape & Shadow */
+  --radius-card:  12px;
+  --shadow-card:  0 2px 12px rgba(58, 40, 32, 0.08);
+  --shadow-hover: 0 8px 28px rgba(58, 40, 32, 0.15);
+}
+
+/* ===== THEME: DOG (terracotta) ===== */
+[data-theme="dog"] {
+  --color-primary:        #C1593C;
+  --color-primary-light:  #E8886E;
+  --color-surface:        #FEFAF5;
+  --color-surface-alt:    #F5EDE2;
+  --color-surface-accent: #FEF6EC;
+  --color-text:           #3A2820;
+  --color-text-muted:     #9A7A6A;
+  --color-border:         #EAE0D5;
+  --shadow-card:          0 2px 12px rgba(58, 40, 32, 0.08);
+  --shadow-hover:         0 8px 28px rgba(58, 40, 32, 0.15);
+}
+
+/* ===== THEME: CAT (lavender) ===== */
+[data-theme="cat"] {
+  --color-primary:        #7C6B9E;
+  --color-primary-light:  #A695C4;
+  --color-surface:        #F8F4F0;
+  --color-surface-alt:    #F0EBF5;
+  --color-surface-accent: #F3EEF8;
+  --color-text:           #2A2030;
+  --color-text-muted:     #9B8FA8;
+  --color-border:         #DDD5E8;
+  --shadow-card:          0 2px 12px rgba(42, 32, 48, 0.08);
+  --shadow-hover:         0 8px 28px rgba(42, 32, 48, 0.15);
+}
+
+/* ===== LUCIDE ICONS ===== */
+i[data-lucide] {
+  display: inline-block;
+  vertical-align: -0.125em;
+  width: 1em;
+  height: 1em;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  flex-shrink: 0;
+}
+
+/* When icon is inside a flex container, alignment is handled by the parent */
+i[data-lucide] svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ===== RESET ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ===== BASE ===== */
 html, body {
   margin: 0;
   padding: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #fafafa;
-  color: #2a2a2a;
-  line-height: 1.5;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
-a { color: #d94d4d; }
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--color-text);
+  line-height: 1.25;
+  margin: 0 0 0.75rem;
+}
 
-h1, h2, h3 { color: #2a2a2a; }
+p {
+  margin: 0 0 1rem;
+  color: var(--color-text);
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s;
+
+  &:hover {
+    color: var(--color-primary-light);
+  }
+}
