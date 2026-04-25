@@ -2,14 +2,15 @@ import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { ThemeService } from '../core/services/theme.service';
+import { SapkoLogoComponent } from './sapko-logo.component';
 
 @Component({
   selector: 'app-nav',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, SapkoLogoComponent],
   template: `
     <nav class="nav">
       <a routerLink="/" class="brand">
-        <i data-lucide="paw-print" class="brand-icon"></i>
+        <app-sapko-logo size="1.6rem" />
         <span>Šapko</span>
       </a>
 
@@ -73,7 +74,6 @@ import { ThemeService } from '../core/services/theme.service';
       transition: opacity 0.2s;
     }
     .brand:hover { opacity: 0.8; }
-    .brand-icon { width: 1.2rem; height: 1.2rem; color: var(--color-primary); }
 
     /* Pet switcher */
     .pet-switcher {

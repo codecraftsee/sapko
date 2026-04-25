@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(gh api:*)",
-      "Bash(openspec init:*)"
+      "Bash(openspec init:*)",
+      "Bash(git --no-pager diff src/app/layout/nav.component.ts)",
+      "Bash(git --no-pager diff angular.json)",
+      "Bash(git --no-pager diff src/app/layout/nav.component.ts src/styles.scss)",
+      "Bash(git --no-pager diff src/app/features/home/home.component.ts src/app/layout/nav.component.ts)",
+      "Bash(git --no-pager diff -- src/app/layout/nav.component.ts)",
+      "Bash(git --no-pager diff src/app/layout/sapko-logo.component.ts)"
     ]
   }
 }
