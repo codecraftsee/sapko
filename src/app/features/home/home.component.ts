@@ -1,8 +1,10 @@
-import { AfterViewInit, Component, inject } from '@angular/core';
+import { AfterViewInit, Component, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { createIcons, icons } from 'lucide';
 import { ThemeService, PetType } from '../../core/services/theme.service';
-import { SapkoLogoComponent } from '../../layout/sapko-logo.component';
+import { AdoptionService } from '../../core/services/adoption.service';
+import { UrgentService } from '../../core/services/urgent.service';
+import { AdoptionListing, UrgentRequest, UrgentType } from '../../core/models/api.models';
 
 interface PetCard {
   name: string;
@@ -28,10 +30,42 @@ interface UrgentItem {
   featured?: boolean;
 }
 
+const URGENT_TYPE_META: Record<UrgentType, { badge: string; badgeIcon: string; ctaLabel: string }> = {
+  blood:               { badge: 'Krv',        badgeIcon: 'droplets',         ctaLabel: 'Otvori oglas' },
+  injured_stray:       { badge: 'Povređen',   badgeIcon: 'stethoscope',      ctaLabel: 'Detalji' },
+  medical_fundraising: { badge: 'Lečenje',    badgeIcon: 'syringe',          ctaLabel: 'Doniraj' },
+  lost_pet:            { badge: 'Izgubljen',  badgeIcon: 'search',           ctaLabel: 'Detalji' },
+  food_donation:       { badge: 'Hrana',      badgeIcon: 'utensils',         ctaLabel: 'Pomozi' },
+  other:               { badge: 'Hitno',      badgeIcon: 'alert-triangle',   ctaLabel: 'Detalji' },
+};
+
+const FALLBACK_PETS: PetCard[] = [
+  { name: 'Luka', species: 'dog', speciesLabel: 'Pas',   city: 'Beograd',    age: '3 god', sex: 'Mužjak', tags: ['Druželjubiv', 'Vakcinisan'],   imageHint: 'luka.jpg' },
+  { name: 'Mia',  species: 'dog', speciesLabel: 'Pas',   city: 'Novi Sad',   age: '5 god', sex: 'Ženka',  tags: ['Sterilisana', 'Sa decom'],     imageHint: 'mia.jpg' },
+  { name: 'Mrva', species: 'cat', speciesLabel: 'Mačka', city: 'Niš',        age: '2 god', sex: 'Ženka',  tags: ['U privremenom domu'], urgent: true, imageHint: 'mrva.jpg' },
+  { name: 'Reks', species: 'dog', speciesLabel: 'Pas',   city: 'Kragujevac', age: '4 god', sex: 'Mužjak', tags: ['Treniran', 'Velika rasa'],     imageHint: 'reks.jpg' },
+];
+
+const FALLBACK_URGENT: UrgentItem[] = [
+  {
+    type: 'krv',
+    badge: 'Krv · DEA 1.1−',
+    badgeIcon: 'droplets',
+    time: 'Pre 2 sata',
+    title: 'Hitno traži se donor krvi za operaciju u Beogradu',
+    excerpt: 'Naša Đina ima planiranu operaciju do četvrtka i potreban joj je donor sa DEA 1.1− krvnom grupom. Ako vaš pas može pomoći, javite se direktno na klinici "Vetex".',
+    city: 'Beograd · Vetex klinika',
+    ctaLabel: 'Otvori oglas',
+    featured: true,
+  },
+  { type: 'povredjen', badge: 'Povređen', badgeIcon: 'stethoscope', time: 'Pre 4h', title: 'Pas pronađen pored autoputa kod Pančeva', city: 'Pančevo',  ctaLabel: 'Detalji' },
+  { type: 'lecenje',   badge: 'Lečenje',  badgeIcon: 'syringe',     time: 'Pre 6h', title: 'Sakupljamo za operaciju kuka — mačka Riba', city: 'Novi Sad', ctaLabel: 'Doniraj' },
+];
+
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, SapkoLogoComponent],
+  imports: [RouterLink],
   template: `
     <!-- ===================== HERO ===================== -->
     <section class="hero">
@@ -114,6 +148,12 @@ interface UrgentItem {
             </article>
           }
         </div>
+
+        <div class="how-more">
+          <a routerLink="/kako-radi" class="btn btn--ghost">
+            Saznaj više o procesu <i data-lucide="arrow-right" class="icon--sm"></i>
+          </a>
+        </div>
       </div>
     </section>
 
@@ -131,7 +171,7 @@ interface UrgentItem {
         </div>
 
         <div class="pets-grid">
-          @for (p of pets; track p.name) {
+          @for (p of pets(); track p.name) {
             <a routerLink="/udomi" class="pet-card">
               <div class="pet-card__media">
                 <span class="pet-card__species">
@@ -174,7 +214,7 @@ interface UrgentItem {
         </div>
 
         <div class="urgent-grid">
-          @for (u of urgent; track u.title) {
+          @for (u of urgent(); track u.title) {
             <a
               routerLink="/urgentno"
               class="urgent-card"
@@ -204,6 +244,13 @@ interface UrgentItem {
             </a>
           }
         </div>
+
+        <a routerLink="/urgentno" class="urgent-more">
+          <span>Još hitnih poziva čeka odgovor</span>
+          <span class="urgent-more__cta">
+            Vidi sve <i data-lucide="arrow-right" class="icon--sm"></i>
+          </span>
+        </a>
       </div>
     </section>
 
@@ -311,64 +358,12 @@ interface UrgentItem {
             <a routerLink="/registracija" class="btn btn--lg">
               <i data-lucide="user-plus"></i> Registruj se besplatno
             </a>
-            <a routerLink="/" fragment="kako" class="btn btn--ghost btn--lg">Kako Šapko radi</a>
+            <a routerLink="/kako-radi" class="btn btn--ghost btn--lg">Kako Šapko radi</a>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ===================== FOOTER ===================== -->
-    <footer class="foot">
-      <div class="foot-grid">
-        <div class="foot-brand">
-          <a routerLink="/" class="brand" aria-label="Šapko">
-            <app-sapko-logo size="1.6rem" />
-            <span class="brand-text">Šapko</span>
-          </a>
-          <p>Otvorena platforma za udomljavanje, hitnu pomoć i registar donora krvi za pse i mačke u Srbiji.</p>
-          <div class="foot-socials">
-            <a class="foot-soc" href="#" aria-label="Instagram"><i data-lucide="instagram"></i></a>
-            <a class="foot-soc" href="#" aria-label="Facebook"><i data-lucide="facebook"></i></a>
-            <a class="foot-soc" href="#" aria-label="Email"><i data-lucide="mail"></i></a>
-          </div>
-        </div>
-        <div class="foot-col">
-          <h4>Platforma</h4>
-          <ul>
-            <li><a routerLink="/udomi">Udomljavanje</a></li>
-            <li><a routerLink="/urgentno">Hitno</a></li>
-            <li><a routerLink="/donori">Donori krvi</a></li>
-            <li><a routerLink="/moj-nalog">Postavi oglas</a></li>
-          </ul>
-        </div>
-        <div class="foot-col">
-          <h4>O Šapku</h4>
-          <ul>
-            <li><a href="#">Naša priča</a></li>
-            <li><a href="#">Partneri</a></li>
-            <li><a href="#">Kontakt</a></li>
-            <li><a href="#">Podrži nas</a></li>
-          </ul>
-        </div>
-        <div class="foot-col">
-          <h4>Resursi</h4>
-          <ul>
-            <li><a href="#">Vodič za udomitelje</a></li>
-            <li><a href="#">Šta znači biti donor?</a></li>
-            <li><a href="#">Često postavljana pitanja</a></li>
-            <li><a href="#">Pravila zajednice</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="foot-bottom">
-        <span>© 2026 Šapko. Napravljeno sa ljubavlju u Beogradu.</span>
-        <div class="foot-bottom-links">
-          <a href="#">Privatnost</a>
-          <a href="#">Uslovi korišćenja</a>
-          <a href="#">Kolačići</a>
-        </div>
-      </div>
-    </footer>
   `,
   styles: [`
     :host { display: block; }
@@ -380,21 +375,17 @@ interface UrgentItem {
       text-align: center;
       overflow: hidden;
       background:
-        radial-gradient(circle at 18% 0%,
-          color-mix(in srgb, var(--color-primary) 18%, transparent) 0%,
-          transparent 55%),
-        radial-gradient(circle at 100% 100%,
-          color-mix(in srgb, var(--color-primary) 18%, transparent) 0%,
-          transparent 50%),
-        var(--color-surface);
+        radial-gradient(circle at 18% 0%, var(--primary-soft-bg) 0%, transparent 55%),
+        radial-gradient(circle at 100% 100%, var(--primary-soft-bg) 0%, transparent 50%),
+        var(--bg-base);
       transition: background 0.6s ease;
     }
     .eyebrow {
       display: inline-flex; align-items: center; gap: 0.4rem;
       padding: 0.3rem 0.8rem;
-      background: color-mix(in srgb, var(--color-primary) 15%, transparent);
-      color: var(--color-primary);
-      border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+      background: var(--primary-soft-bg);
+      color: var(--primary-hover);
+      border: 1px solid var(--primary-soft-border);
       border-radius: 999px;
       font-size: 0.72rem; font-weight: 600;
       letter-spacing: 0.08em; text-transform: uppercase;
@@ -411,12 +402,12 @@ interface UrgentItem {
       max-width: 760px;
       margin-left: auto; margin-right: auto;
       text-wrap: balance;
-      color: var(--color-text);
+      color: var(--text);
     }
     .hero .lead {
       margin: 0 auto;
       max-width: 580px;
-      color: var(--color-text-muted);
+      color: var(--text-muted);
       font-size: 1.05rem;
       line-height: 1.55;
     }
@@ -433,14 +424,14 @@ interface UrgentItem {
     .species-tile {
       position: relative;
       width: 200px;
-      background: var(--color-surface);
-      border: 1.5px solid var(--color-border);
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
       border-radius: 16px;
       padding: 1.5rem 1.25rem 1.25rem;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       gap: 0.4rem;
-      color: var(--color-text);
+      color: var(--text);
       font: inherit;
       font-family: var(--font-body);
       cursor: pointer;
@@ -449,14 +440,14 @@ interface UrgentItem {
     }
     .species-tile:hover:not(.is-disabled):not(.is-active) {
       transform: translateY(-3px);
-      border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+      border-color: var(--primary-soft-border);
       box-shadow: var(--shadow-hover);
     }
     .species-tile__icon {
       width: 64px; height: 64px;
       border-radius: 50%;
-      background: color-mix(in srgb, var(--color-primary) 15%, transparent);
-      color: var(--color-primary);
+      background: var(--primary-soft-bg);
+      color: var(--primary);
       display: inline-flex; align-items: center; justify-content: center;
       margin-bottom: 0.4rem;
       transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
@@ -469,41 +460,41 @@ interface UrgentItem {
     }
     .species-tile__meta {
       font-size: 0.78rem;
-      color: var(--color-text-muted);
+      color: var(--text-muted);
       font-weight: 500;
     }
     .species-tile.is-active {
-      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent), var(--shadow-hover);
+      background: var(--primary-soft-bg);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-soft-bg), var(--shadow-hover);
       transform: translateY(-3px);
     }
     .species-tile.is-active .species-tile__icon {
-      background: var(--color-primary);
+      background: var(--primary);
       color: white;
       transform: scale(1.05);
     }
     .species-tile.is-active .species-tile__label,
-    .species-tile.is-active .species-tile__meta { color: var(--color-primary); }
+    .species-tile.is-active .species-tile__meta { color: var(--primary); }
     .species-tile.is-disabled {
       opacity: 0.55;
       cursor: not-allowed;
-      background: var(--color-surface-alt);
+      background: var(--bg-subtle);
     }
     .species-tile.is-disabled .species-tile__icon {
-      background: var(--color-border);
-      color: var(--color-text-muted);
+      background: var(--border);
+      color: var(--text-muted);
     }
     .species-tile.is-disabled .species-tile__meta {
-      color: var(--color-text-muted);
+      color: var(--text-muted);
       font-style: italic;
     }
 
     /* ============== IMPACT STRIP ============== */
     .impact {
-      border-top: 1px solid var(--color-border);
-      border-bottom: 1px solid var(--color-border);
-      background: var(--color-surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
       padding: 1.75rem 1.5rem;
     }
     .impact-grid {
@@ -515,22 +506,22 @@ interface UrgentItem {
     .impact-item {
       text-align: center;
       padding: 0.5rem 1rem;
-      border-right: 1px solid var(--color-border);
+      border-right: 1px solid var(--border);
     }
     .impact-item:last-child { border-right: none; }
     .impact-num {
       font-family: var(--font-display);
       font-size: 2rem; font-weight: 800;
-      color: var(--color-text);
+      color: var(--text);
       letter-spacing: -0.03em;
       line-height: 1;
       display: block;
     }
-    .impact-num span { color: var(--color-primary); }
+    .impact-num span { color: var(--primary); }
     .impact-label {
       margin-top: 0.4rem;
       font-size: 0.82rem;
-      color: var(--color-text-muted);
+      color: var(--text-muted);
       letter-spacing: 0.02em;
     }
 
@@ -551,23 +542,23 @@ interface UrgentItem {
       margin: 0;
       max-width: 640px;
       text-wrap: balance;
-      color: var(--color-text);
+      color: var(--text);
     }
     .section-head .tag {
       display: inline-block;
       font-size: 0.72rem; font-weight: 700;
       letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--color-primary);
+      color: var(--primary);
       margin-bottom: 0.6rem;
     }
     .section-head .tag--urgent { color: #DC2626; }
     .section-head p {
       margin: 0; max-width: 460px;
-      color: var(--color-text-muted);
+      color: var(--text-muted);
       font-size: 0.98rem;
     }
     .section-head a.section-cta {
-      color: var(--color-primary); font-weight: 600;
+      color: var(--primary); font-weight: 600;
       display: inline-flex; align-items: center; gap: 0.3rem;
       white-space: nowrap;
       text-decoration: none;
@@ -582,9 +573,14 @@ interface UrgentItem {
       grid-template-columns: repeat(3, 1fr);
       gap: 1.25rem;
     }
+    .how-more {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+    }
     .step {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 16px;
       padding: 1.75rem 1.5rem;
       position: relative;
@@ -596,14 +592,14 @@ interface UrgentItem {
       font-family: var(--font-display);
       font-size: 3.5rem; font-weight: 800;
       line-height: 1;
-      color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+      color: var(--primary-soft-bg);
       letter-spacing: -0.05em;
     }
     .step__icon {
       width: 48px; height: 48px;
       border-radius: 12px;
-      background: color-mix(in srgb, var(--color-primary) 15%, transparent);
-      color: var(--color-primary);
+      background: var(--primary-soft-bg);
+      color: var(--primary-hover);
       display: inline-flex; align-items: center; justify-content: center;
       margin-bottom: 1rem;
     }
@@ -611,9 +607,9 @@ interface UrgentItem {
     .step h3 {
       font-family: var(--font-display);
       font-size: 1.15rem; margin: 0 0 0.4rem;
-      color: var(--color-text);
+      color: var(--text);
     }
-    .step p { margin: 0; color: var(--color-text-muted); font-size: 0.92rem; line-height: 1.55; }
+    .step p { margin: 0; color: var(--text-muted); font-size: 0.92rem; line-height: 1.55; }
 
     /* ============== ADOPTEES ============== */
     .pets-grid {
@@ -622,8 +618,8 @@ interface UrgentItem {
       gap: 1rem;
     }
     .pet-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 12px;
       overflow: hidden;
       box-shadow: var(--shadow-card);
@@ -634,14 +630,14 @@ interface UrgentItem {
     }
     .pet-card:hover {
       transform: translateY(-3px);
-      border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+      border-color: var(--primary-soft-border);
       box-shadow: var(--shadow-hover);
       color: inherit;
     }
     .pet-card__media {
       height: 180px;
-      background: color-mix(in srgb, var(--color-primary) 15%, transparent);
-      color: var(--color-primary);
+      background: var(--primary-soft-bg);
+      color: var(--primary);
       display: flex; align-items: center; justify-content: center;
       position: relative;
       background-image:
@@ -655,7 +651,7 @@ interface UrgentItem {
     .pet-card__species {
       position: absolute; top: 0.65rem; left: 0.65rem;
       background: rgba(255,255,255,0.92);
-      color: var(--color-primary);
+      color: var(--primary);
       border-radius: 999px;
       padding: 0.25rem 0.6rem;
       font-size: 0.72rem; font-weight: 600;
@@ -672,7 +668,7 @@ interface UrgentItem {
       letter-spacing: 0.04em;
     }
     .pet-card__placeholder-text {
-      color: var(--color-primary);
+      color: var(--primary);
       font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
       font-size: 0.7rem;
       letter-spacing: 0.06em;
@@ -683,10 +679,10 @@ interface UrgentItem {
     .pet-card__body h3 {
       font-family: var(--font-display);
       font-size: 1.05rem; margin: 0 0 0.2rem;
-      color: var(--color-text);
+      color: var(--text);
     }
     .pet-card__meta {
-      margin: 0; color: var(--color-text-muted); font-size: 0.82rem;
+      margin: 0; color: var(--text-muted); font-size: 0.82rem;
       display: flex; align-items: center; gap: 0.4rem;
     }
     .pet-card__meta .dot {
@@ -698,24 +694,25 @@ interface UrgentItem {
     }
     .pet-tag {
       font-size: 0.7rem; font-weight: 500;
-      color: var(--color-text-muted);
+      color: var(--text-muted);
       padding: 0.2rem 0.55rem;
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--border);
       border-radius: 999px;
     }
 
     /* ============== URGENT BOARD ============== */
-    .urgent-section { background: var(--color-surface-alt); }
+    .urgent-section { background: var(--bg-subtle); }
     .urgent-grid {
       display: grid;
-      grid-template-columns: 1.4fr 1fr 1fr;
+      grid-template-columns: 1.6fr 1fr;
+      grid-template-rows: 1fr 1fr;
       gap: 1rem;
     }
     .urgent-card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-left: 3px solid #DC2626;
-      border-radius: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--urgent);
+      border-radius: var(--radius-md);
       padding: 1.25rem 1.4rem;
       color: inherit; text-decoration: none;
       display: flex; flex-direction: column; gap: 0.5rem;
@@ -723,16 +720,45 @@ interface UrgentItem {
     }
     .urgent-card:hover {
       transform: translateY(-2px);
-      border-color: #DC2626;
-      box-shadow: var(--shadow-hover);
+      border-color: var(--urgent);
+      box-shadow: var(--shadow-md);
       color: inherit;
     }
     .urgent-card--featured {
       grid-row: span 2;
-      background: #FEF2F2;
-      border: 1px solid #FECACA;
-      border-left: 3px solid #DC2626;
+      grid-column: 1;
+      background: var(--urgent-soft-bg);
+      border: 1px solid var(--urgent-soft-border);
+      border-left: 3px solid var(--urgent);
       padding: 1.75rem;
+    }
+    .urgent-more {
+      grid-column: 1 / -1;
+      margin-top: 0.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.95rem 1.4rem;
+      background: var(--bg-card);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: border-color 0.2s, background 0.2s, color 0.2s;
+    }
+    .urgent-more:hover {
+      border-color: var(--urgent);
+      background: var(--urgent-soft-bg);
+      color: var(--text);
+    }
+    .urgent-more__cta {
+      color: var(--urgent);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
     }
     .urgent-card__head {
       display: flex; align-items: center; gap: 0.6rem;
@@ -748,19 +774,19 @@ interface UrgentItem {
       font-size: 0.72rem; font-weight: 600;
     }
     .urgent-time {
-      font-size: 0.74rem; color: var(--color-text-muted);
+      font-size: 0.74rem; color: var(--text-muted);
       display: inline-flex; align-items: center; gap: 0.25rem;
     }
     .urgent-card h3 {
       font-family: var(--font-display);
       font-size: 1rem; letter-spacing: -0.015em;
       margin: 0;
-      color: var(--color-text);
+      color: var(--text);
     }
     .urgent-card--featured h3 { font-size: 1.4rem; }
     .urgent-card p {
       margin: 0;
-      color: var(--color-text-muted);
+      color: var(--text-muted);
       font-size: 0.88rem;
       line-height: 1.5;
     }
@@ -769,7 +795,7 @@ interface UrgentItem {
       display: flex; align-items: center; justify-content: space-between;
       padding-top: 0.4rem;
       font-size: 0.82rem;
-      color: var(--color-text-muted);
+      color: var(--text-muted);
     }
     .urgent-card__cta {
       color: #DC2626; font-weight: 600;
@@ -847,7 +873,7 @@ interface UrgentItem {
       display: inline-flex; align-items: center; justify-content: center;
       gap: 0.5rem;
       padding: 0.75rem 1.35rem;
-      background: var(--color-primary);
+      background: var(--primary);
       color: white;
       border: none;
       border-radius: 8px;
@@ -857,18 +883,18 @@ interface UrgentItem {
       text-decoration: none;
       transition: background 0.15s, transform 0.15s, box-shadow 0.2s;
     }
-    .btn:hover { background: var(--color-primary-light); color: white; transform: translateY(-1px); }
+    .btn:hover { background: var(--primary-hover); color: white; transform: translateY(-1px); }
     .btn:active { transform: translateY(1px); }
     .btn--lg { padding: 0.95rem 1.7rem; font-size: 1rem; }
     .btn [data-lucide] { width: 1.1rem; height: 1.1rem; }
     .btn--ghost {
       background: transparent;
-      color: var(--color-primary);
-      box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-primary) 40%, transparent);
+      color: var(--primary);
+      box-shadow: inset 0 0 0 1.5px var(--primary-soft-border);
     }
     .btn--ghost:hover {
-      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-      color: var(--color-primary);
+      background: var(--primary-soft-bg);
+      color: var(--primary);
     }
     .btn--ondark { background: #DC2626; color: #fff; }
     .btn--ondark:hover { background: #B91C1C; color: #fff; }
@@ -885,8 +911,8 @@ interface UrgentItem {
       gap: 1.25rem;
     }
     .quote {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 16px;
       padding: 2rem;
       position: relative;
@@ -896,7 +922,7 @@ interface UrgentItem {
       font-family: var(--font-display);
       font-size: 4.5rem;
       line-height: 0.8;
-      color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+      color: var(--primary-soft-border);
       position: absolute;
       top: 1.2rem; left: 1.5rem;
       font-weight: 800;
@@ -905,32 +931,32 @@ interface UrgentItem {
       margin: 1.5rem 0;
       font-size: 1.05rem;
       line-height: 1.55;
-      color: var(--color-text);
+      color: var(--text);
       text-wrap: pretty;
     }
     .quote__author {
       display: flex; align-items: center; gap: 0.75rem;
-      border-top: 1px solid var(--color-border);
+      border-top: 1px solid var(--border);
       padding-top: 1rem;
     }
     .quote__avatar {
       width: 40px; height: 40px;
       border-radius: 50%;
-      background: color-mix(in srgb, var(--color-primary) 15%, transparent);
-      color: var(--color-primary);
+      background: var(--primary-soft-bg);
+      color: var(--primary);
       display: inline-flex; align-items: center; justify-content: center;
       font-weight: 700;
       flex-shrink: 0;
       font-size: 0.85rem;
     }
     .quote__avatar--urgent { background: #FEF2F2; color: #DC2626; }
-    .quote__name { font-weight: 600; font-size: 0.92rem; color: var(--color-text); }
-    .quote__role { font-size: 0.8rem; color: var(--color-text-muted); }
+    .quote__name { font-weight: 600; font-size: 0.92rem; color: var(--text); }
+    .quote__role { font-size: 0.8rem; color: var(--text-muted); }
 
     /* ============== PARTNERS ============== */
     .partners {
-      border-top: 1px solid var(--color-border);
-      background: var(--color-surface);
+      border-top: 1px solid var(--border);
+      background: var(--bg-card);
       padding: 2.5rem 1.5rem;
     }
     .partners-inner {
@@ -942,7 +968,7 @@ interface UrgentItem {
     .partners-label {
       font-size: 0.74rem; font-weight: 700;
       letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--color-text-muted);
+      color: var(--text-muted);
     }
     .partners-list {
       display: flex; align-items: center; gap: 2.25rem;
@@ -950,7 +976,7 @@ interface UrgentItem {
     }
     .partner {
       display: inline-flex; align-items: center; gap: 0.5rem;
-      color: var(--color-text-muted);
+      color: var(--text-muted);
       font-weight: 600; font-size: 0.95rem;
       letter-spacing: -0.01em;
     }
@@ -959,15 +985,13 @@ interface UrgentItem {
     /* ============== JOIN CTA ============== */
     .join {
       text-align: center;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 24px;
       padding: 3.5rem 2rem;
       background:
-        radial-gradient(circle at 50% 0%,
-          color-mix(in srgb, var(--color-primary) 15%, transparent) 0%,
-          transparent 60%),
-        var(--color-surface);
+        radial-gradient(circle at 50% 0%, var(--primary-soft-bg) 0%, transparent 60%),
+        var(--bg-card);
     }
     .join h2 {
       font-family: var(--font-display);
@@ -975,94 +999,22 @@ interface UrgentItem {
       margin: 0 auto 0.85rem;
       max-width: 680px;
       text-wrap: balance;
-      color: var(--color-text);
+      color: var(--text);
     }
     .join p {
       margin: 0 auto 1.75rem;
       max-width: 540px;
-      color: var(--color-text-muted);
+      color: var(--text-muted);
       font-size: 1rem;
     }
     .join-actions { display: inline-flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; }
-
-    /* ============== FOOTER ============== */
-    .foot {
-      background: #2A211A;
-      color: #C9BCAE;
-      padding: 3.5rem 1.5rem 1.5rem;
-      margin-top: 4rem;
-    }
-    .foot-grid {
-      max-width: 1180px; margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1.4fr 1fr 1fr 1fr;
-      gap: 2.5rem;
-      padding-bottom: 2.5rem;
-      border-bottom: 1px solid rgba(251,246,238,0.1);
-    }
-    .foot-brand .brand {
-      display: inline-flex; align-items: center; gap: 0.45rem;
-      font-family: var(--font-display);
-      font-weight: 800;
-      font-size: 1.4rem;
-      color: #fff;
-      text-decoration: none;
-      letter-spacing: -0.02em;
-    }
-    .foot-brand .brand .brand-text { color: #fff; }
-    .foot-brand p {
-      margin: 1rem 0 1.25rem;
-      color: #9C8E80;
-      font-size: 0.9rem;
-      line-height: 1.55;
-      max-width: 320px;
-    }
-    .foot-socials { display: flex; gap: 0.5rem; }
-    .foot-soc {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      border: 1px solid rgba(251,246,238,0.15);
-      color: #C9BCAE;
-      display: inline-flex; align-items: center; justify-content: center;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-      text-decoration: none;
-    }
-    .foot-soc [data-lucide] { width: 1.1rem; height: 1.1rem; }
-    .foot-soc:hover { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
-    .foot-col h4 {
-      color: #fff;
-      font-family: var(--font-body);
-      font-size: 0.78rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      margin: 0 0 1rem;
-    }
-    .foot-col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.6rem; }
-    .foot-col a {
-      color: #C9BCAE;
-      font-size: 0.9rem;
-      text-decoration: none;
-    }
-    .foot-col a:hover { color: #fff; }
-    .foot-bottom {
-      max-width: 1180px; margin: 0 auto;
-      padding-top: 1.5rem;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 1rem;
-      color: #6B5E52;
-      font-size: 0.82rem;
-    }
-    .foot-bottom-links { display: flex; gap: 1.25rem; }
-    .foot-bottom-links a { color: #6B5E52; text-decoration: none; }
-    .foot-bottom-links a:hover { color: #C9BCAE; }
 
     /* ============== RESPONSIVE ============== */
     @media (max-width: 980px) {
       .impact-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem 0; }
       .impact-item:nth-child(2) { border-right: none; }
       .impact-item:nth-child(1), .impact-item:nth-child(2) {
-        border-bottom: 1px solid var(--color-border); padding-bottom: 1.25rem;
+        border-bottom: 1px solid var(--border); padding-bottom: 1.25rem;
       }
       .impact-item:nth-child(3), .impact-item:nth-child(4) { padding-top: 1.25rem; }
       .how-grid { grid-template-columns: 1fr; }
@@ -1071,11 +1023,9 @@ interface UrgentItem {
       .urgent-card--featured { grid-row: auto; }
       .donor { grid-template-columns: 1fr; padding: 2rem; }
       .testimonial-grid { grid-template-columns: 1fr; }
-      .foot-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
     }
     @media (max-width: 560px) {
       .pets-grid { grid-template-columns: 1fr; }
-      .foot-grid { grid-template-columns: 1fr; }
       section.block { padding: 3rem 0; }
       .hero { padding: 2.25rem 1rem 2rem; }
       .species-picker { gap: 0.65rem; }
@@ -1087,6 +1037,20 @@ interface UrgentItem {
 })
 export class HomeComponent implements AfterViewInit {
   readonly theme = inject(ThemeService);
+  private adoption = inject(AdoptionService);
+  private urgentSvc = inject(UrgentService);
+
+  pets = signal<PetCard[]>(FALLBACK_PETS);
+  urgent = signal<UrgentItem[]>(FALLBACK_URGENT);
+
+  constructor() {
+    // Reload featured pets + urgent items whenever the theme (species) changes.
+    effect(() => {
+      const species = this.theme.petType();
+      this.loadPets(species);
+      this.loadUrgent(species);
+    });
+  }
 
   ngAfterViewInit(): void {
     setTimeout(() => createIcons({ icons }), 0);
@@ -1095,6 +1059,69 @@ export class HomeComponent implements AfterViewInit {
   setSpecies(t: PetType): void {
     this.theme.set(t);
     setTimeout(() => createIcons({ icons }), 0);
+  }
+
+  private loadPets(species: PetType): void {
+    this.adoption.list({ species }).subscribe({
+      next: (rows) => {
+        const cards = rows.slice(0, 4).map(r => this.toPetCard(r));
+        // Keep mock fallback visible until the API is populated.
+        this.pets.set(cards.length ? cards : FALLBACK_PETS);
+        setTimeout(() => createIcons({ icons }), 0);
+      },
+      error: () => this.pets.set(FALLBACK_PETS),
+    });
+  }
+
+  private loadUrgent(species: PetType): void {
+    this.urgentSvc.list({}).subscribe({
+      next: (rows) => {
+        const matches = rows.filter(r => !r.species || r.species === species);
+        const items = matches.slice(0, 3).map((r, i) => this.toUrgentItem(r, i === 0));
+        this.urgent.set(items.length ? items : FALLBACK_URGENT);
+        setTimeout(() => createIcons({ icons }), 0);
+      },
+      error: () => this.urgent.set(FALLBACK_URGENT),
+    });
+  }
+
+  private toPetCard(l: AdoptionListing): PetCard {
+    const pet = l.pet;
+    return {
+      name: pet?.name ?? '—',
+      species: (pet?.species ?? 'dog') as 'dog' | 'cat',
+      speciesLabel: pet?.species === 'cat' ? 'Mačka' : 'Pas',
+      city: l.city,
+      age: pet?.age_years != null ? `${pet.age_years} god` : '',
+      sex: pet?.sex === 'female' ? 'Ženka' : pet?.sex === 'male' ? 'Mužjak' : '',
+      tags: [pet?.breed, pet?.size].filter((t): t is string => !!t).slice(0, 2),
+      imageHint: pet?.photos?.[0]?.url ?? `${pet?.name?.toLowerCase() ?? 'pet'}.jpg`,
+    };
+  }
+
+  private toUrgentItem(r: UrgentRequest, featured: boolean): UrgentItem {
+    const meta = URGENT_TYPE_META[r.type];
+    return {
+      type: 'krv',
+      badge: meta.badge,
+      badgeIcon: meta.badgeIcon,
+      time: this.relativeTime(r.created_at),
+      title: r.title,
+      excerpt: featured ? r.description : undefined,
+      city: r.city,
+      ctaLabel: meta.ctaLabel,
+      featured,
+    };
+  }
+
+  private relativeTime(iso: string): string {
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const hours = Math.round(diffMs / 3_600_000);
+    if (hours < 1) return 'Upravo';
+    if (hours < 24) return `Pre ${hours}h`;
+    const days = Math.round(hours / 24);
+    if (days === 1) return 'Juče';
+    return `Pre ${days} dana`;
   }
 
   readonly impact = [
@@ -1110,43 +1137,12 @@ export class HomeComponent implements AfterViewInit {
     { num: '03', icon: 'heart',           title: 'Pomozite',    body: 'Udomite, donirajte krv ili podelite oglas dalje — svaki gest pravi razliku.' },
   ];
 
-  readonly pets: PetCard[] = [
-    { name: 'Luka', species: 'dog', speciesLabel: 'Pas',   city: 'Beograd',    age: '3 god', sex: 'Mužjak', tags: ['Druželjubiv', 'Vakcinisan'],   imageHint: 'luka.jpg' },
-    { name: 'Mia',  species: 'dog', speciesLabel: 'Pas',   city: 'Novi Sad',   age: '5 god', sex: 'Ženka',  tags: ['Sterilisana', 'Sa decom'],     imageHint: 'mia.jpg' },
-    { name: 'Mrva', species: 'cat', speciesLabel: 'Mačka', city: 'Niš',        age: '2 god', sex: 'Ženka',  tags: ['U privremenom domu'], urgent: true, imageHint: 'mrva.jpg' },
-    { name: 'Reks', species: 'dog', speciesLabel: 'Pas',   city: 'Kragujevac', age: '4 god', sex: 'Mužjak', tags: ['Treniran', 'Velika rasa'],     imageHint: 'reks.jpg' },
-  ];
-
-  readonly urgent: UrgentItem[] = [
-    {
-      type: 'krv',
-      badge: 'Krv · DEA 1.1−',
-      badgeIcon: 'droplets',
-      time: 'Pre 2 sata',
-      title: 'Hitno traži se donor krvi za operaciju u Beogradu',
-      excerpt: 'Naša Đina ima planiranu operaciju do četvrtka i potreban joj je donor sa DEA 1.1− krvnom grupom. Ako vaš pas može pomoći, javite se direktno na klinici "Vetex".',
-      city: 'Beograd · Vetex klinika',
-      ctaLabel: 'Otvori oglas',
-      featured: true,
-    },
-    { type: 'povredjen', badge: 'Povređen', badgeIcon: 'stethoscope',  time: 'Pre 4h', title: 'Pas pronađen pored autoputa kod Pančeva',         city: 'Pančevo',          ctaLabel: 'Detalji' },
-    { type: 'lecenje',   badge: 'Lečenje',  badgeIcon: 'syringe',      time: 'Pre 6h', title: 'Sakupljamo za operaciju kuka — mačka Riba',       city: 'Novi Sad',         ctaLabel: 'Doniraj' },
-    { type: 'izgubljen', badge: 'Izgubljen',badgeIcon: 'search',       time: 'Juče',   title: 'Mačak Tisa nestao na Vračaru — bele šape',        city: 'Beograd · Vračar', ctaLabel: 'Detalji' },
-    { type: 'hrana',     badge: 'Hrana',    badgeIcon: 'utensils',     time: 'Juče',   title: 'Azilu u Vranju potrebna hrana za štence',         city: 'Vranje',           ctaLabel: 'Pomozi' },
-  ];
-
   readonly quotes = [
     {
       text: 'Reks je bio kod nas svega tri dana kad smo shvatili da nikad više nećemo živeti bez njega. Šapko nas je povezao sa azilom u Kragujevcu i celokupan proces udomljavanja je trajao manje od nedelju dana.',
       initials: 'MJ',
       author: 'Marija J.',
       role: 'Udomila psa Reksa · Beograd',
-    },
-    {
-      text: 'Kao veterinar, registar donora mi je promenio način rada. Umesto da satima zovem klijente, objavim potrebu na Šapku i potvrđen donor stigne za par sati. Jednostavno radi.',
-      initials: 'DV',
-      author: 'dr Dragan V.',
-      role: 'Veterinar · Klinika Vetex, Beograd',
     },
   ];
 
