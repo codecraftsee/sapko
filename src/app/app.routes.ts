@@ -16,6 +16,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/donors/donors-info.component').then((m) => m.DonorsInfoComponent),
   },
   {
+    path: 'kako-radi',
+    loadComponent: () => import('./features/how-it-works/how-it-works.component').then((m) => m.HowItWorksComponent),
+  },
+  {
     path: 'prijava',
     loadComponent: () => import('./features/auth/login.component').then((m) => m.LoginComponent),
   },

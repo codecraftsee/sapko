@@ -1,56 +1,84 @@
-/* ===== DESIGN TOKENS ===== */
+/* ===== DESIGN TOKENS — match Sapko Landing.html ===== */
 :root {
-  /* Colors — default (dog / terracotta) */
-  --color-primary:       #C1593C;
-  --color-primary-light: #E8886E;
-  --color-surface:       #FEFAF5;
-  --color-surface-alt:   #F5EDE2;
-  --color-text:          #3A2820;
-  --color-text-muted:    #9A7A6A;
-  --color-green:         #4A7C59;
-  --color-amber:         #D4943A;
-  --color-border:        #EAE0D5;
-  --color-surface-accent: #FEF6EC;
+  /* Surfaces */
+  --bg-base:    #FBF6EE;
+  --bg-card:    #FFFFFF;
+  --bg-subtle:  #F3EDE1;
+  --bg-deep:    #2A211A;
 
-  /* Typography */
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-body:    'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Text */
+  --text:        #1F1B16;
+  --text-muted:  #6B5E52;
+  --text-faint:  #9C8E80;
 
-  /* Shape & Shadow */
-  --radius-card:  12px;
-  --shadow-card:  0 2px 12px rgba(58, 40, 32, 0.08);
-  --shadow-hover: 0 8px 28px rgba(58, 40, 32, 0.15);
+  /* Borders */
+  --border:         #EDE3D3;
+  --border-strong:  #D9CDB8;
+
+  /* Urgent */
+  --urgent:              #DC2626;
+  --urgent-hover:        #B91C1C;
+  --urgent-soft-bg:      #FEF2F2;
+  --urgent-soft-border:  #FECACA;
+
+  /* Primary — DOG (warm amber) */
+  --primary:              #D97706;
+  --primary-hover:        #B45309;
+  --primary-soft-bg:      #FEF3C7;
+  --primary-soft-border:  #FDE68A;
+  --on-primary:           #FFFFFF;
+  --focus-ring:           #FDE68A;
+
+  /* Backwards-compat aliases used by existing Angular code */
+  --color-primary:        var(--primary);
+  --color-primary-light:  var(--primary-hover);
+  --color-primary-dark:   var(--primary-hover);
+  --color-surface:        var(--bg-base);
+  --color-surface-alt:    var(--bg-subtle);
+  --color-surface-accent: var(--primary-soft-bg);
+  --color-text:           var(--text);
+  --color-text-muted:     var(--text-muted);
+  --color-border:         var(--border);
+
+  /* Typography — Inter (match mock), Playfair only for select display headings */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Shape */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-pill: 999px;
+  --radius-card: var(--radius-md);
+
+  /* Shadows */
+  --shadow-sm:    0 1px 2px rgba(31, 27, 22, 0.04), 0 2px 8px rgba(31, 27, 22, 0.04);
+  --shadow-md:    0 4px 16px rgba(31, 27, 22, 0.06);
+  --shadow-lg:    0 12px 32px rgba(31, 27, 22, 0.08);
+  --shadow-card:  var(--shadow-sm);
+  --shadow-hover: var(--shadow-md);
 }
 
-/* ===== THEME: DOG (terracotta) ===== */
+/* ===== THEME: DOG (already :root default — explicit selector kept for SSR + parity) ===== */
 [data-theme="dog"] {
-  --color-primary:        #C1593C;
-  --color-primary-light:  #E8886E;
-  --color-surface:        #FEFAF5;
-  --color-surface-alt:    #F5EDE2;
-  --color-surface-accent: #FEF6EC;
-  --color-text:           #3A2820;
-  --color-text-muted:     #9A7A6A;
-  --color-border:         #EAE0D5;
-  --shadow-card:          0 2px 12px rgba(58, 40, 32, 0.08);
-  --shadow-hover:         0 8px 28px rgba(58, 40, 32, 0.15);
+  --primary:              #D97706;
+  --primary-hover:        #B45309;
+  --primary-soft-bg:      #FEF3C7;
+  --primary-soft-border:  #FDE68A;
+  --focus-ring:           #FDE68A;
 }
 
-/* ===== THEME: CAT (lavender) ===== */
+/* ===== THEME: CAT (deep teal — exact mock palette) ===== */
 [data-theme="cat"] {
-  --color-primary:        #7C6B9E;
-  --color-primary-light:  #A695C4;
-  --color-surface:        #F8F4F0;
-  --color-surface-alt:    #F0EBF5;
-  --color-surface-accent: #F3EEF8;
-  --color-text:           #2A2030;
-  --color-text-muted:     #9B8FA8;
-  --color-border:         #DDD5E8;
-  --shadow-card:          0 2px 12px rgba(42, 32, 48, 0.08);
-  --shadow-hover:         0 8px 28px rgba(42, 32, 48, 0.15);
+  --primary:              #0E7490;
+  --primary-hover:        #155E75;
+  --primary-soft-bg:      #CFFAFE;
+  --primary-soft-border:  #A5F3FC;
+  --focus-ring:           #A5F3FC;
 }
 
-/* ===== LUCIDE ICONS ===== */
+/* ===== LUCIDE ICON DEFAULTS ===== */
 i[data-lucide] {
   display: inline-block;
   vertical-align: -0.125em;
@@ -63,8 +91,6 @@ i[data-lucide] {
   fill: none;
   flex-shrink: 0;
 }
-
-/* When icon is inside a flex container, alignment is handled by the parent */
 i[data-lucide] svg {
   display: block;
   width: 100%;
@@ -72,40 +98,44 @@ i[data-lucide] svg {
 }
 
 /* ===== RESET ===== */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; }
 
-/* ===== BASE ===== */
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-family: var(--font-body);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-base);
+  color: var(--text);
+  line-height: 1.55;
   font-size: 16px;
-  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background 0.5s ease;
 }
 
 h1, h2, h3, h4 {
-  font-family: var(--font-display);
-  color: var(--color-text);
-  line-height: 1.25;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
   margin: 0 0 0.75rem;
 }
+h1 { font-weight: 800; }
+h2 { font-weight: 700; }
+h3, h4 { font-weight: 600; }
 
 p {
   margin: 0 0 1rem;
-  color: var(--color-text);
+  color: var(--text);
 }
 
 a {
-  color: var(--color-primary);
+  color: var(--primary);
   text-decoration: none;
   transition: color 0.2s;
+}
+a:hover { color: var(--primary-hover); }
 
-  &:hover {
-    color: var(--color-primary-light);
-  }
+::selection {
+  background: var(--primary-soft-bg);
+  color: var(--primary-hover);
 }
