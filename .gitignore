@@ -42,5 +42,6 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
-.claude/settings.json
-.claude/settings.json
+
+# Claude Code — settings.json is shared, settings.local.json is per-machine
+.claude/settings.local.json

@@ -24,6 +24,7 @@ import { SapkoLogoComponent } from './sapko-logo.component';
           <h4>Platforma</h4>
           <ul>
             <li><a routerLink="/udomi">Udomljavanje</a></li>
+            <li><a routerLink="/izgubljeno-nadjeno">Izgubljeno / Nađeno</a></li>
             <li><a routerLink="/urgentno">Hitno</a></li>
             <li><a routerLink="/donori">Donori krvi</a></li>
             <li><a routerLink="/kako-radi">Kako radi</a></li>

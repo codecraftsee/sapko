@@ -81,11 +81,6 @@ const PAGE_SIZE = 12;
           <div class="toolbar__filters">
             <button
               class="filter-chip"
-              [class.is-active]="!speciesFilter()"
-              (click)="setSpecies(undefined)"
-            >Sve vrste</button>
-            <button
-              class="filter-chip"
               [class.is-active]="speciesFilter() === 'dog'"
               (click)="setSpecies('dog')"
             >
@@ -223,12 +218,13 @@ const PAGE_SIZE = 12;
         </div>
       </div>
     </section>
+
   `,
   styles: [`
     :host { display: block; }
     .container { max-width: 1180px; margin: 0 auto; padding: 0 1.5rem; }
     section.block { padding: 4.5rem 0; }
-    section.block--tight-top { padding-top: 0; }
+    section.block--tight-top { padding-top: 2rem; }
 
     /* ===== Page header ===== */
     .page-header {
@@ -555,6 +551,8 @@ const PAGE_SIZE = 12;
       font-size: 1rem;
     }
 
+    .btn--lg { padding: 0.95rem 1.7rem; font-size: 1rem; }
+
     /* ===== Responsive ===== */
     @media (max-width: 980px) {
       .pets-grid--lg { grid-template-columns: repeat(2, 1fr); }
@@ -580,11 +578,14 @@ export class AdoptionListComponent implements AfterViewInit {
 
   // Default the chip filter to whichever species the theme chose, but allow manual override.
   constructor() {
+    // Nav theme toggle (Psi/Mačke) mirrors into the chip filter.
     effect(() => {
-      this.speciesFilter.set(this.theme.petType());
+      const t = this.theme.petType();
+      if (this.speciesFilter() !== t) this.speciesFilter.set(t);
     });
+    // Refetch listings whenever the chip filter changes.
     effect(() => {
-      this.theme.petType();
+      this.speciesFilter();
       this.load();
     });
     // Re-render Lucide icons whenever filtered list changes (chip toggles, page changes).
@@ -643,6 +644,7 @@ export class AdoptionListComponent implements AfterViewInit {
 
   setSpecies(s: PetType | undefined): void {
     this.speciesFilter.set(s);
+    if (s === 'dog' || s === 'cat') this.theme.set(s);
     this.page.set(1);
   }
 
@@ -672,7 +674,7 @@ export class AdoptionListComponent implements AfterViewInit {
 
   private load(): void {
     this.loading.set(true);
-    this.svc.list({ species: this.theme.petType() as Species }).subscribe({
+    this.svc.list({ species: this.speciesFilter() as Species | undefined }).subscribe({
       next: (rows) => {
         const cards = rows.map(r => this.toCard(r));
         this.fetched.set(cards.length ? cards : FALLBACK_PETS);

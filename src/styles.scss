@@ -1,3 +1,5 @@
+@import 'leaflet/dist/leaflet.css';
+
 /* ===== DESIGN TOKENS — match Sapko Landing.html ===== */
 :root {
   /* Surfaces */
@@ -20,6 +22,17 @@
   --urgent-hover:        #B91C1C;
   --urgent-soft-bg:      #FEF2F2;
   --urgent-soft-border:  #FECACA;
+
+  /* Lost (blue) / Found (green) — Izgubljeno & Nađeno accents */
+  --lost:                #2563EB;
+  --lost-hover:          #1D4ED8;
+  --lost-soft-bg:        #EFF6FF;
+  --lost-soft-border:    #BFDBFE;
+
+  --found:               #16A34A;
+  --found-hover:         #15803D;
+  --found-soft-bg:       #F0FDF4;
+  --found-soft-border:   #BBF7D0;
 
   /* Primary — DOG (warm amber) */
   --primary:              #D97706;
