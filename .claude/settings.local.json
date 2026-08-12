@@ -8,7 +8,9 @@
       "Bash(git --no-pager diff src/app/layout/nav.component.ts src/styles.scss)",
       "Bash(git --no-pager diff src/app/features/home/home.component.ts src/app/layout/nav.component.ts)",
       "Bash(git --no-pager diff -- src/app/layout/nav.component.ts)",
-      "Bash(git --no-pager diff src/app/layout/sapko-logo.component.ts)"
+      "Bash(git --no-pager diff src/app/layout/sapko-logo.component.ts)",
+      "Bash(venv/Scripts/python.exe -c \"import sqlite3; c=sqlite3.connect\\('sapko.db'\\); print\\([r[1] for r in c.execute\\('PRAGMA table_info\\(urgent_requests\\)'\\).fetchall\\(\\)]\\)\")",
+      "Bash(venv/Scripts/python.exe -c ' *)"
     ]
   }
 }

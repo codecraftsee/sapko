@@ -21,9 +21,11 @@ const TYPE_META: Record<UrgentType, UrgentMeta> = {
   other:               { icon: 'alert-triangle',   label: 'Ostalo',     ctaLabel: 'Detalji' },
 };
 
+// Lost & found have dedicated boards (/izgubljeni, /pronadjeni); this board covers help-requests only.
 const TYPE_ORDER: UrgentType[] = [
-  'blood', 'injured_stray', 'medical_fundraising', 'lost_pet', 'food_donation',
+  'blood', 'medical_fundraising', 'food_donation', 'other',
 ];
+const ALLOWED_TYPES = new Set<UrgentType>(TYPE_ORDER);
 
 interface UrgentCard {
   id?: string;
@@ -41,13 +43,9 @@ interface UrgentCard {
 
 const FALLBACK: UrgentCard[] = [
   { type: 'blood', badge: 'Krv · DEA 1.1−', badgeIcon: 'droplets', ctaLabel: 'Otvori oglas', time: 'Pre 2h', title: 'Hitno traži se donor krvi za operaciju u Beogradu', description: 'Đina ima planiranu operaciju do četvrtka i potreban joj je donor sa DEA 1.1− krvnom grupom.', city: 'Beograd · Vetex klinika', species: 'dog', featured: true },
-  { type: 'injured_stray', badge: 'Povređen', badgeIcon: 'stethoscope', ctaLabel: 'Detalji', time: 'Pre 4h', title: 'Pas pronađen pored autoputa kod Pančeva', description: 'Mužjak srednje veličine, smeđi, bez čipa. Trenutno kod veterinara, traži se vlasnik ili dom.', city: 'Pančevo', species: 'dog' },
   { type: 'medical_fundraising', badge: 'Lečenje', badgeIcon: 'syringe', ctaLabel: 'Doniraj', time: 'Pre 6h', title: 'Sakupljamo za operaciju kuka — mačka Riba', description: 'Potrebno je 65.000 din za operaciju displazije kuka. Sakupljeno do sad: 42.000 din.', city: 'Novi Sad', species: 'cat' },
-  { type: 'lost_pet', badge: 'Izgubljen', badgeIcon: 'search', ctaLabel: 'Detalji', time: 'Juče', title: 'Mačak Tisa nestao na Vračaru — bele šape', description: 'Sivi mačak sa belim šapama i belim trbuhom. Veoma plašljiv. Nagrada za informaciju.', city: 'Beograd · Vračar', species: 'cat' },
   { type: 'food_donation', badge: 'Hrana', badgeIcon: 'utensils', ctaLabel: 'Pomozi', time: 'Juče', title: 'Azilu u Vranju potrebna hrana za štence', description: 'Trenutno 32 šteneta na brizi. Trebamo suvu hranu za štence i konzerve.', city: 'Vranje', species: 'dog' },
   { type: 'blood', badge: 'Krv · DEA 1.1+', badgeIcon: 'droplets', ctaLabel: 'Otvori oglas', time: 'Juče', title: 'Donor potreban za maleno štene u Kragujevcu', description: 'Štene od 4 meseca prebačeno na hitnu intervenciju, hitno potrebna transfuzija.', city: 'Kragujevac', species: 'dog' },
-  { type: 'injured_stray', badge: 'Povređen', badgeIcon: 'stethoscope', ctaLabel: 'Detalji', time: 'Pre 2 dana', title: 'Mačka pregažena u Subotici — hitna operacija', description: 'Stabilizovana, ali su potrebna dodatna sredstva za rehabilitaciju.', city: 'Subotica', species: 'cat' },
-  { type: 'lost_pet', badge: 'Izgubljen', badgeIcon: 'search', ctaLabel: 'Detalji', time: 'Pre 2 dana', title: 'Pas Argo nestao kod Ade Ciganlije', description: 'Beli labrador, 5 godina, ima crveni okovratnik. Poslednji put viđen u petak.', city: 'Beograd · Ada', species: 'dog' },
   { type: 'medical_fundraising', badge: 'Lečenje', badgeIcon: 'syringe', ctaLabel: 'Doniraj', time: 'Pre 3 dana', title: 'Štene Mrva — sakupljanje za parvo terapiju', description: 'Pozitivno na parvovirus, potrebna intenzivna terapija.', city: 'Beograd', species: 'dog' },
 ];
 
@@ -94,11 +92,6 @@ const PAGE_SIZE = 9;
     <section class="type-tabs-bar">
       <div class="container">
         <div class="species-chips" role="group" aria-label="Filter po vrsti">
-          <button
-            class="filter-chip"
-            [class.is-active]="!speciesFilter()"
-            (click)="setSpecies(undefined)"
-          >Sve vrste</button>
           <button
             class="filter-chip"
             [class.is-active]="speciesFilter() === 'dog'"
@@ -584,7 +577,7 @@ export class UrgentBoardComponent implements AfterViewInit {
   private fetched = signal<UrgentCard[]>(FALLBACK);
   loading = signal(true);
 
-  speciesFilter = signal<PetType | undefined>(undefined);
+  speciesFilter = signal<PetType>(this.theme.petType());
   typeFilter = signal<UrgentType | undefined>(undefined);
   page = signal(1);
 
@@ -592,13 +585,14 @@ export class UrgentBoardComponent implements AfterViewInit {
   readonly typeOrder = TYPE_ORDER;
 
   constructor() {
-    // Default species chip to active theme; user can manually override.
+    // Nav theme toggle mirrors into the species chip.
     effect(() => {
-      this.speciesFilter.set(this.theme.petType());
+      const t = this.theme.petType();
+      if (this.speciesFilter() !== t) this.speciesFilter.set(t);
     });
+    // Refetch whenever species changes.
     effect(() => {
-      // Re-load when theme changes — service supports species filter.
-      this.theme.petType();
+      this.speciesFilter();
       this.load();
     });
     // Re-render Lucide whenever filters/page change.
@@ -662,8 +656,9 @@ export class UrgentBoardComponent implements AfterViewInit {
     return ` · prikazano ${start}–${end}`;
   });
 
-  setSpecies(s: PetType | undefined): void {
+  setSpecies(s: PetType): void {
     this.speciesFilter.set(s);
+    this.theme.set(s);
     this.page.set(1);
   }
 
@@ -691,9 +686,11 @@ export class UrgentBoardComponent implements AfterViewInit {
 
   private load(): void {
     this.loading.set(true);
-    this.svc.list({ species: this.theme.petType() }).subscribe({
+    this.svc.list({ species: this.speciesFilter() }).subscribe({
       next: (rows) => {
-        const cards = rows.map(r => this.toCard(r));
+        const cards = rows
+          .filter(r => ALLOWED_TYPES.has(r.type))
+          .map(r => this.toCard(r));
         this.fetched.set(cards.length ? cards : FALLBACK);
         this.loading.set(false);
         this.page.set(1);

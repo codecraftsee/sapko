@@ -12,6 +12,38 @@ export const routes: Routes = [
     loadComponent: () => import('./features/urgent/urgent-board.component').then((m) => m.UrgentBoardComponent),
   },
   {
+    path: 'izgubljeno-nadjeno',
+    title: 'Izgubljeno & Nađeno — Šapko',
+    loadComponent: () => import('./features/reports/lost-found.component').then((m) => m.LostFoundComponent),
+  },
+  {
+    path: 'izgubljeno-nadjeno/:id',
+    loadComponent: () => import('./features/reports/report-detail.component').then((m) => m.ReportDetailComponent),
+  },
+  { path: 'izgubljeni', redirectTo: '/izgubljeno-nadjeno?tab=lost', pathMatch: 'full' },
+  { path: 'pronadjeni', redirectTo: '/izgubljeno-nadjeno?tab=found', pathMatch: 'full' },
+  {
+    path: 'prijavi',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/reports/report-hub.component').then((m) => m.ReportHubComponent),
+  },
+  {
+    path: 'prijavi/izgubljen',
+    canActivate: [authGuard],
+    data: { kind: 'lost' },
+    loadComponent: () => import('./features/reports/report-form.component').then((m) => m.ReportFormComponent),
+  },
+  {
+    path: 'prijavi/pronadjen',
+    canActivate: [authGuard],
+    data: { kind: 'found' },
+    loadComponent: () => import('./features/reports/report-form.component').then((m) => m.ReportFormComponent),
+  },
+  {
+    path: 'prijavi/udomi',
+    redirectTo: 'moj-nalog',
+  },
+  {
     path: 'donori',
     loadComponent: () => import('./features/donors/donors-info.component').then((m) => m.DonorsInfoComponent),
   },

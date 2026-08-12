@@ -21,34 +21,36 @@ import { SapkoLogoComponent } from './sapko-logo.component';
 
         @if (!isAuthPage()) {
           <nav class="nav-links" aria-label="Glavna navigacija">
-            <a routerLink="/udomi"    routerLinkActive="active">Udomljavanje</a>
-            <a routerLink="/urgentno" routerLinkActive="active">Hitno</a>
-            <a routerLink="/donori"   routerLinkActive="active">Donori krvi</a>
-            <a routerLink="/kako-radi" routerLinkActive="active">Kako radi</a>
+            <a routerLink="/udomi"             routerLinkActive="active">Udomljavanje</a>
+            <a routerLink="/izgubljeno-nadjeno" routerLinkActive="active">Izgubljeno / Nađeno</a>
+            <a routerLink="/urgentno"          routerLinkActive="active">Hitno</a>
+            <a routerLink="/donori"            routerLinkActive="active">Donori krvi</a>
+            <a routerLink="/kako-radi"         routerLinkActive="active">Kako radi</a>
           </nav>
         }
 
         <div class="nav-right">
           @if (!isAuthPage()) {
-            <div class="theme-toggle" role="group" aria-label="Promeni temu">
+            <div class="theme-toggle" role="group" aria-label="Promeni temu" [attr.data-active]="theme.petType()">
               <button
                 type="button"
-                class="theme-btn"
+                class="theme-tab"
                 [class.is-active]="theme.petType() === 'dog'"
                 [attr.aria-pressed]="theme.petType() === 'dog'"
                 (click)="setPet('dog')"
               >
-                <i data-lucide="dog"></i><span>Pas</span>
+                <i class="ph-fill ph-dog"></i><span>Psi</span>
               </button>
               <button
                 type="button"
-                class="theme-btn"
+                class="theme-tab"
                 [class.is-active]="theme.petType() === 'cat'"
                 [attr.aria-pressed]="theme.petType() === 'cat'"
                 (click)="setPet('cat')"
               >
-                <i data-lucide="cat"></i><span>Mačka</span>
+                <i class="ph-fill ph-cat"></i><span>Mačke</span>
               </button>
+              <span class="theme-tab__indicator" aria-hidden="true"></span>
             </div>
           }
 
@@ -132,34 +134,60 @@ import { SapkoLogoComponent } from './sapko-logo.component';
       flex-shrink: 0;
     }
 
-    /* Theme toggle pill — dog / cat */
+    /* Theme toggle — sliding underline indicator (dog / cat) */
     .theme-toggle {
-      display: inline-flex;
-      padding: 3px;
-      background: var(--bg-base);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-pill);
+      position: relative;
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      align-items: stretch;
+      gap: 0;
+      padding: 0;
     }
-    .theme-btn {
-      border: none;
+    .theme-toggle::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      background: var(--border);
+    }
+    .theme-tab {
+      position: relative;
+      border: 0;
       background: transparent;
-      padding: 0.4rem 0.85rem;
-      color: var(--text-muted);
+      padding: 0.45rem 0.95rem 0.55rem;
+      color: var(--text-faint);
       font: inherit;
-      font-size: 0.82rem;
-      font-weight: 500;
-      border-radius: var(--radius-pill);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
-      transition: background 0.15s ease, color 0.15s ease;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: color 0.2s ease;
     }
-    .theme-btn i[data-lucide] { width: 1.05rem; height: 1.05rem; }
-    .theme-btn:hover { color: var(--text); }
-    .theme-btn.is-active {
+    .theme-tab [class*="ph-"] { font-size: 1.05rem; }
+    .theme-tab:hover { color: var(--text-muted); }
+    .theme-tab.is-active { color: var(--text); }
+    .theme-tab__indicator {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 50%;
+      height: 2px;
       background: var(--primary);
-      color: var(--on-primary);
+      border-radius: 2px;
+      transition: transform 0.42s cubic-bezier(.45,1.5,.4,1),
+                  background 0.4s ease;
+      pointer-events: none;
+    }
+    .theme-toggle[data-active="cat"] .theme-tab__indicator {
+      transform: translateX(100%);
     }
 
     /* Plain text link (Prijava, Moj nalog) */
@@ -210,8 +238,8 @@ import { SapkoLogoComponent } from './sapko-logo.component';
     }
     @media (max-width: 760px) {
       .nav-links { display: none; }
-      .theme-btn span { display: none; }
-      .theme-btn { padding: 0.4rem 0.6rem; }
+      .theme-tab span { display: none; }
+      .theme-tab { padding: 0.45rem 0.7rem 0.55rem; }
     }
   `],
 })
