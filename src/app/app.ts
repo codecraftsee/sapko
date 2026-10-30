@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, afterNextRender } from '@angular/core';
+import { Component, inject, OnInit, afterNextRender, ChangeDetectionStrategy } from '@angular/core';
 import { createIcons, icons } from 'lucide';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs';
@@ -15,27 +15,43 @@ import { ThemeService } from './core/services/theme.service';
       <router-outlet />
     </main>
     <footer class="site-footer">
-      <p>© {{ year }} Šapko · Za Miću i svaku drugu šapu <i data-lucide="paw-print" class="footer-paw"></i></p>
+      <p>
+        © {{ year }} Šapko · Za Miću i svaku drugu šapu
+        <i data-lucide="paw-print" class="footer-paw"></i>
+      </p>
     </footer>
   `,
-  styles: [`
-    main { min-height: calc(100vh - 120px); background: var(--color-surface); }
-    .site-footer {
-      background: var(--color-text);
-      color: rgba(255, 255, 255, 0.45);
-      text-align: center;
-      padding: 1.25rem 2rem;
-      font-size: 0.875rem;
-    }
-    .site-footer p { margin: 0; color: inherit; }
-    .footer-paw { width: 0.9rem; height: 0.9rem; opacity: 0.6; }
-  `],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styles: [
+    `
+      main {
+        min-height: calc(100vh - 120px);
+        background: var(--color-surface);
+      }
+      .site-footer {
+        background: var(--color-text);
+        color: rgba(255, 255, 255, 0.45);
+        text-align: center;
+        padding: 1.25rem 2rem;
+        font-size: 0.875rem;
+      }
+      .site-footer p {
+        margin: 0;
+        color: inherit;
+      }
+      .footer-paw {
+        width: 0.9rem;
+        height: 0.9rem;
+        opacity: 0.6;
+      }
+    `,
+  ],
 })
 export class App implements OnInit {
-  private auth   = inject(AuthService);
-  private theme  = inject(ThemeService);
+  private auth = inject(AuthService);
+  private theme = inject(ThemeService);
   private router = inject(Router);
-  readonly year  = new Date().getFullYear();
+  readonly year = new Date().getFullYear();
 
   constructor() {
     afterNextRender(() => createIcons({ icons }));
@@ -47,7 +63,7 @@ export class App implements OnInit {
     }
 
     this.router.events
-      .pipe(filter(e => e instanceof NavigationEnd))
+      .pipe(filter((e) => e instanceof NavigationEnd))
       .subscribe(() => setTimeout(() => createIcons({ icons }), 0));
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -7,7 +7,9 @@ import { AuthService } from '../../core/services/auth.service';
     <section class="account">
       <h1>Moj nalog</h1>
       @if (auth.user(); as u) {
-        <p><strong>{{ u.full_name || u.email }}</strong></p>
+        <p>
+          <strong>{{ u.full_name || u.email }}</strong>
+        </p>
         <p class="meta">{{ u.email }} · {{ u.city || 'nepoznat grad' }}</p>
       }
 
@@ -27,14 +29,44 @@ import { AuthService } from '../../core/services/auth.service';
       </div>
     </section>
   `,
-  styles: [`
-    :host { display: block; max-width: 900px; margin: 0 auto; padding: 2rem; }
-    .meta { color: var(--color-text-muted); }
-    .sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-top: 1.5rem; }
-    article { background: var(--color-surface-alt); padding: 1.5rem; border: 1px solid var(--color-border); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
-    article h2 { display: flex; align-items: center; gap: 0.4rem; font-family: var(--font-display); }
-    .section-icon { width: 1.2rem; height: 1.2rem; color: var(--color-primary); }
-  `],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styles: [
+    `
+      :host {
+        display: block;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .meta {
+        color: var(--color-text-muted);
+      }
+      .sections {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.25rem;
+        margin-top: 1.5rem;
+      }
+      article {
+        background: var(--color-surface-alt);
+        padding: 1.5rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+      }
+      article h2 {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-family: var(--font-display);
+      }
+      .section-icon {
+        width: 1.2rem;
+        height: 1.2rem;
+        color: var(--color-primary);
+      }
+    `,
+  ],
 })
 export class AccountComponent {
   auth = inject(AuthService);
