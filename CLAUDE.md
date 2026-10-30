@@ -1,7 +1,7 @@
 # Šapko Frontend — Claude Instructions
 
 ## Tech Stack
-- Angular 21 (standalone components, signals, new control flow `@if` / `@for`)
+- Angular 22 (standalone components, signals, new control flow `@if` / `@for`)
 - TypeScript strict mode
 - RxJS (via HttpClient)
 - SCSS
