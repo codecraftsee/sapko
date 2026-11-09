@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, inject, input, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { createIcons, icons } from 'lucide';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -45,6 +45,7 @@ const CONFIGS: Record<ReportKind, KindConfig> = {
 
 @Component({
   selector: 'app-report-form',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [FormsModule, MapPickerComponent],
   template: `
     <section class="page-header">

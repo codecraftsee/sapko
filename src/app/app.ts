@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, afterNextRender } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, afterNextRender } from '@angular/core';
 import { createIcons, icons } from 'lucide';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs';
@@ -9,6 +9,7 @@ import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [RouterOutlet, NavComponent, SiteFooterComponent],
   template: `
     <app-nav />

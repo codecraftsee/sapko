@@ -1,4 +1,4 @@
-import { AfterViewInit, Component } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { createIcons, icons } from 'lucide';
 
@@ -18,6 +18,7 @@ interface TrustItem {
 
 @Component({
   selector: 'app-how-it-works',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [RouterLink],
   template: `
     <!-- ===================== PAGE HEADER ===================== -->

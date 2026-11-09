@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { LowerCasePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { UrgentService } from '../../core/services/urgent.service';
@@ -27,6 +27,7 @@ interface ReportCard {
 
 @Component({
   selector: 'app-lost-found',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [RouterLink, LowerCasePipe],
   template: `
     <!-- ===================== PAGE HEADER ===================== -->

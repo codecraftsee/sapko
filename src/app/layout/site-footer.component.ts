@@ -1,10 +1,11 @@
-import { AfterViewInit, Component } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { createIcons, icons } from 'lucide';
 import { SapkoLogoComponent } from './sapko-logo.component';
 
 @Component({
   selector: 'app-site-footer',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [RouterLink, SapkoLogoComponent],
   template: `
     <footer class="foot">

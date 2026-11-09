@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, effect, inject, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { createIcons, icons } from 'lucide';
 import { RouterLink } from '@angular/router';
 import { ThemeService, PetType } from '../../core/services/theme.service';
@@ -39,6 +39,7 @@ const PAGE_SIZE = 8;
 
 @Component({
   selector: 'app-donors-info',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [RouterLink],
   template: `
     <!-- ===================== HERO BANNER (DARK) ===================== -->

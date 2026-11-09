@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { UrgentService } from '../../core/services/urgent.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -7,6 +7,7 @@ import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-report-detail',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [RouterLink],
   template: `
     <section class="page-header" [class.is-lost]="report()?.type === 'lost_pet'" [class.is-found]="report()?.type === 'injured_stray'">

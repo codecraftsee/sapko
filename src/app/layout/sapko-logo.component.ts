@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 /**
  * Šapko brand logo — match-uje "Sapko Landing.html" mock 1:1.
@@ -17,6 +17,7 @@ import { Component, Input } from '@angular/core';
  */
 @Component({
   selector: 'app-sapko-logo',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   template: `
     @switch (variant) {

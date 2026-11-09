@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { ThemeService } from '../core/services/theme.service';
@@ -11,6 +11,7 @@ import { SapkoLogoComponent } from './sapko-logo.component';
  */
 @Component({
   selector: 'app-nav',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [RouterLink, RouterLinkActive, SapkoLogoComponent],
   template: `
     <header class="nav">

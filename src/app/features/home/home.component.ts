@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, effect, inject, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { createIcons, icons } from 'lucide';
 import { ThemeService, PetType } from '../../core/services/theme.service';
@@ -64,6 +64,7 @@ const FALLBACK_URGENT: UrgentItem[] = [
 
 @Component({
   selector: 'app-home',
+  changeDetection: ChangeDetectionStrategy.Eager,
   standalone: true,
   imports: [RouterLink],
   template: `

@@ -1,9 +1,10 @@
-import { AfterViewInit, Component } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
 import { createIcons, icons } from 'lucide';
 import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-report-hub',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [RouterLink],
   template: `
     <section class="page-header">

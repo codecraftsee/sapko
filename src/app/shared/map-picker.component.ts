@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   ElementRef,
   OnDestroy,
@@ -28,6 +29,7 @@ const DEFAULT_ZOOM = 13;
 
 @Component({
   selector: 'app-map-picker',
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="map-picker">
       <div #mapEl class="map-picker__map" role="application" aria-label="Mapa za izbor lokacije"></div>

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, effect, inject, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { createIcons, icons } from 'lucide';
 import { RouterLink } from '@angular/router';
 import { AdoptionService } from '../../core/services/adoption.service';
@@ -39,6 +39,7 @@ const PAGE_SIZE = 12;
 
 @Component({
   selector: 'app-adoption-list',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [RouterLink],
   template: `
     <!-- ===================== PAGE HEADER ===================== -->

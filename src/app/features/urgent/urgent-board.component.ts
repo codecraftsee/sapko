@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, effect, inject, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { createIcons, icons } from 'lucide';
 import { RouterLink } from '@angular/router';
 import { UrgentService } from '../../core/services/urgent.service';
@@ -53,6 +53,7 @@ const PAGE_SIZE = 9;
 
 @Component({
   selector: 'app-urgent-board',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [RouterLink],
   template: `
     <!-- ===================== PAGE HEADER ===================== -->

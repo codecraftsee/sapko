@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, effect, inject, input, signal } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { createIcons, icons } from 'lucide';
 import { RouterLink } from '@angular/router';
 import { UrgentService } from '../../core/services/urgent.service';
@@ -57,6 +57,7 @@ const PAGE_SIZE = 12;
 
 @Component({
   selector: 'app-report-list',
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [RouterLink],
   template: `
     <section class="page-header">

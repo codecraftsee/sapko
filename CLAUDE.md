@@ -1,7 +1,7 @@
 # Šapko Frontend — Claude Instructions
 
 ## Tech Stack
-- Angular 21 (standalone components, signals, new control flow `@if` / `@for`)
+- Angular 22 (standalone components, signals, new control flow `@if` / `@for`)
 - TypeScript strict mode
 - RxJS (via HttpClient)
 - SCSS
@@ -13,7 +13,7 @@ npm install
 npm start   # ng serve on http://localhost:4200
 ```
 
-Backend expected at `http://localhost:8000` (see `src/environments/environment.ts`).
+Backend expected at `http://localhost:8001` (see `src/environments/environment.ts`).
 
 ## Structure
 - `src/app/core/` — services, guards, interceptors, models (app-wide singletons)
