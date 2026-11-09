@@ -76,12 +76,28 @@ export interface UrgentRequest {
   title: string;
   description: string;
   city: string;
+  lat?: number;
+  lng?: number;
   deadline?: string;
   status: UrgentStatus;
   contact_phone?: string;
   extra_data?: Record<string, unknown>;
   created_at: string;
   photos: { id: string; url: string; sort_order: number }[];
+}
+
+export type MatchStatus = 'suggested' | 'confirmed' | 'rejected';
+
+export interface MatchSuggestion {
+  id: string;
+  lost_id: string;
+  found_id: string;
+  score: number;
+  status: MatchStatus;
+  suggested_at: string;
+  confirmed_by_user_id?: string;
+  confirmed_at?: string;
+  other?: UrgentRequest;
 }
 
 export interface TokenResponse {

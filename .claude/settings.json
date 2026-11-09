@@ -4,7 +4,8 @@
       "Bash(openspec status:*)",
       "Bash(openspec instructions:*)",
       "Bash(npm run:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git --no-pager diff --stat)"
     ]
   }
 }
